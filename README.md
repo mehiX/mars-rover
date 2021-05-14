@@ -24,13 +24,12 @@ go build ./cmd/roverctl
 ./roverctl -h
 
 # Example run
-./roverctl -x 4 -y 5 -d N -c FFFRBFLBRFF
+./roverctl -n Kata -x 4 -y 5 -d N -c FFFRBFLBRFF
 ```
 
 ## TODO
 
 Ideas to extend the program:
 - add units to each command. The commands string should look like: 12F3BLR. Later do the same for L and R
-- allow for graceful shutdown by canceling the context on CTRL-C
 - create an interactive version of the command that would allow to input commands and receive position updates
 
