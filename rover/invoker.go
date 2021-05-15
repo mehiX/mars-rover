@@ -17,7 +17,9 @@ func ExecuteAll(ctx context.Context, ch <-chan Command, delay time.Duration) {
 				// channel closed
 				return
 			}
+			c.LogPosition(true)
 			c.Execute()
+			c.LogPosition(false)
 			if delay > 0 {
 				// Insert a delay between the commands for easier testing
 				// Use a select to stop immediately when an interrupt arrives (not wait for the delay between the commands)

@@ -10,12 +10,15 @@ import (
 )
 
 type Command interface {
+	// LogPosition Print out the coordinates and facing direction. A bool argument if it is the starting position
+	LogPosition(bool)
 	Execute()
 }
 
 type noCmd struct{}
 
-func (c *noCmd) Execute() { fmt.Println("NO COMMAND") }
+func (c *noCmd) LogPosition(_ bool) { fmt.Println("N/A") }
+func (c *noCmd) Execute()           { fmt.Println("NO COMMAND") }
 
 var NoCommand = &noCmd{}
 
@@ -24,10 +27,12 @@ type cmdF struct {
 	R      *rover
 }
 
+func (c *cmdF) LogPosition(isStart bool) {
+	logPosition(isStart, "F", c.R)
+}
+
 // Execute Apply command F
 func (c *cmdF) Execute() {
-
-	fmt.Printf("F: %s -> ", c.R)
 
 	switch c.R.Facing {
 	case DIR_N:
@@ -40,7 +45,6 @@ func (c *cmdF) Execute() {
 		c.R.X -= c.Factor
 	}
 
-	fmt.Printf("%s\n", c.R)
 }
 
 type cmdB struct {
@@ -54,11 +58,12 @@ type cmdR struct {
 	R *rover
 }
 
-// Execute Apply the command B
-// TODO: Implement the factor
-func (c *cmdB) Execute() {
+func (c *cmdB) LogPosition(isStart bool) {
+	logPosition(isStart, "B", c.R)
+}
 
-	fmt.Printf("B: %s -> ", c.R)
+// Execute Apply the command B
+func (c *cmdB) Execute() {
 
 	switch c.R.Facing {
 	case DIR_N:
@@ -71,13 +76,14 @@ func (c *cmdB) Execute() {
 		c.R.X += c.Factor
 	}
 
-	fmt.Printf("%s\n", c.R)
+}
+
+func (c *cmdL) LogPosition(isStart bool) {
+	logPosition(isStart, "L", c.R)
 }
 
 func (c *cmdL) Execute() {
 
-	fmt.Printf("L: %s -> ", c.R)
-
 	switch c.R.Facing {
 	case DIR_N:
 		c.R.Facing = DIR_W
@@ -89,13 +95,14 @@ func (c *cmdL) Execute() {
 		c.R.Facing = DIR_S
 	}
 
-	fmt.Printf("%s\n", c.R)
+}
+
+func (c *cmdR) LogPosition(isStart bool) {
+	logPosition(isStart, "R", c.R)
 }
 
 func (c *cmdR) Execute() {
 
-	fmt.Printf("R: %s -> ", c.R)
-
 	switch c.R.Facing {
 	case DIR_N:
 		c.R.Facing = DIR_E
@@ -107,7 +114,6 @@ func (c *cmdR) Execute() {
 		c.R.Facing = DIR_N
 	}
 
-	fmt.Printf("%s\n", c.R)
 }
 
 // Commands Receives a string of commands and a pointer to a rover. Returns a read-only channel where it writes the commnds.
@@ -197,4 +203,12 @@ func onCommand(data []byte, atEOF bool) (advance int, token []byte, err error) {
 
 func isValidCommand(data byte) bool {
 	return data == 'F' || data == 'B' || data == 'R' || data == 'L' || data == 'X'
+}
+
+func logPosition(isStart bool, prefix string, rvr *rover) {
+	if isStart {
+		fmt.Printf("%s: %s -> ", prefix, rvr)
+	} else {
+		fmt.Printf("%s\n", rvr)
+	}
 }

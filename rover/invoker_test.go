@@ -10,6 +10,7 @@ type testCmd struct {
 	counter int
 }
 
+func (c *testCmd) LogPosition(_ bool) {}
 func (c *testCmd) Execute() {
 	c.counter++
 }
