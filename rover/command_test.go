@@ -12,21 +12,22 @@ func TestCommandF(t *testing.T) {
 	type scenario struct {
 		x, y           int
 		dir            string
+		factor         int
 		expectedX      int
 		expectedY      int
 		expectedFacing direction
 	}
 
 	scenarios := []scenario{
-		scenario{1, 1, "n", 1, 2, DIR_N},
-		scenario{1, 1, "s", 1, 0, DIR_S},
-		scenario{1, 1, "e", 2, 1, DIR_E},
-		scenario{1, 1, "w", 0, 1, DIR_W},
+		scenario{1, 1, "n", 5, 1, 6, DIR_N},
+		scenario{1, 1, "s", 3, 1, -2, DIR_S},
+		scenario{1, 1, "e", 4, 5, 1, DIR_E},
+		scenario{1, 1, "w", 1, 0, 1, DIR_W},
 	}
 
 	for _, s := range scenarios {
 		r, _ := NewRover("test", 1, 1, s.dir)
-		c := &cmdF{1, r}
+		c := &cmdF{s.factor, r}
 		c.Execute()
 
 		if r.Facing != s.expectedFacing {
@@ -48,21 +49,22 @@ func TestCommandB(t *testing.T) {
 	type scenario struct {
 		x, y           int
 		dir            string
+		factor         int
 		expectedX      int
 		expectedY      int
 		expectedFacing direction
 	}
 
 	scenarios := []scenario{
-		scenario{1, 1, "n", 1, 0, DIR_N},
-		scenario{1, 1, "s", 1, 2, DIR_S},
-		scenario{1, 1, "e", 0, 1, DIR_E},
-		scenario{1, 1, "w", 2, 1, DIR_W},
+		scenario{1, 1, "n", 5, 1, -4, DIR_N},
+		scenario{1, 1, "s", 4, 1, 5, DIR_S},
+		scenario{1, 1, "e", 5, -4, 1, DIR_E},
+		scenario{1, 1, "w", 3, 4, 1, DIR_W},
 	}
 
 	for _, s := range scenarios {
 		r, _ := NewRover("test", 1, 1, s.dir)
-		c := &cmdB{1, r}
+		c := &cmdB{s.factor, r}
 		c.Execute()
 
 		if r.Facing != s.expectedFacing {

@@ -25,20 +25,19 @@ type cmdF struct {
 }
 
 // Execute Apply command F
-// TODO: implement the factor
 func (c *cmdF) Execute() {
 
 	fmt.Printf("F: %s -> ", c.R)
 
 	switch c.R.Facing {
 	case DIR_N:
-		c.R.Y++
+		c.R.Y += c.Factor
 	case DIR_S:
-		c.R.Y--
+		c.R.Y -= c.Factor
 	case DIR_E:
-		c.R.X++
+		c.R.X += c.Factor
 	case DIR_W:
-		c.R.X--
+		c.R.X -= c.Factor
 	}
 
 	fmt.Printf("%s\n", c.R)
@@ -63,13 +62,13 @@ func (c *cmdB) Execute() {
 
 	switch c.R.Facing {
 	case DIR_N:
-		c.R.Y--
+		c.R.Y -= c.Factor
 	case DIR_S:
-		c.R.Y++
+		c.R.Y += c.Factor
 	case DIR_E:
-		c.R.X--
+		c.R.X -= c.Factor
 	case DIR_W:
-		c.R.X++
+		c.R.X += c.Factor
 	}
 
 	fmt.Printf("%s\n", c.R)
