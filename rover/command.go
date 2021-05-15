@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -19,9 +20,12 @@ func (c *noCmd) Execute() { fmt.Println("NO COMMAND") }
 var NoCommand = &noCmd{}
 
 type cmdF struct {
-	R *rover
+	Factor int
+	R      *rover
 }
 
+// Execute Apply command F
+// TODO: implement the factor
 func (c *cmdF) Execute() {
 
 	fmt.Printf("F: %s -> ", c.R)
@@ -41,7 +45,8 @@ func (c *cmdF) Execute() {
 }
 
 type cmdB struct {
-	R *rover
+	Factor int
+	R      *rover
 }
 type cmdL struct {
 	R *rover
@@ -50,6 +55,8 @@ type cmdR struct {
 	R *rover
 }
 
+// Execute Apply the command B
+// TODO: Implement the factor
 func (c *cmdB) Execute() {
 
 	fmt.Printf("B: %s -> ", c.R)
@@ -114,20 +121,16 @@ func Commands(ctx context.Context, input io.Reader, rvr *rover) <-chan Command {
 		defer close(ch)
 
 		scanner := bufio.NewScanner(input)
-		scanner.Split(bufio.ScanRunes)
+		scanner.Split(onCommand)
 
 		for scanner.Scan() {
-			r := rune(strings.ToUpper(scanner.Text())[0])
+			txt := scanner.Text()
 
-			if r == 'X' {
+			if txt == "X" {
 				break
 			}
 
-			if r == '\n' {
-				continue
-			}
-
-			cmd := decodeCommand(r, rvr)
+			cmd := decodeCommand(txt, rvr)
 
 			select {
 			case <-ctx.Done():
@@ -140,12 +143,25 @@ func Commands(ctx context.Context, input io.Reader, rvr *rover) <-chan Command {
 	return ch
 }
 
-func decodeCommand(r rune, rvr *rover) Command {
+// decodeCommand Decodes string of form `10F` where the last rune is the command identifier and the preceding number is the multiplication factor
+func decodeCommand(txt string, rvr *rover) Command {
+
+	r := rune(txt[len(txt)-1])
+	factor, _ := strconv.Atoi(txt[:len(txt)-1])
+
 	switch r {
 	case 'F':
-		return &cmdF{rvr}
+		if factor == 0 {
+			// set default factor to 1 instead of 0
+			factor = 1
+		}
+		return &cmdF{factor, rvr}
 	case 'B':
-		return &cmdB{rvr}
+		if factor == 0 {
+			// set default factor to 1 instead of 0
+			factor = 1
+		}
+		return &cmdB{factor, rvr}
 	case 'L':
 		return &cmdL{rvr}
 	case 'R':
@@ -153,4 +169,33 @@ func decodeCommand(r rune, rvr *rover) Command {
 	default:
 		return NoCommand
 	}
+}
+
+// onCommand A SplitFunc that filters out bad commands. It returns tokens for only valid commands
+func onCommand(data []byte, atEOF bool) (advance int, token []byte, err error) {
+
+	data = []byte(strings.ToUpper(string(data)))
+	var start int
+
+	for i := 0; i < len(data); i++ {
+		if isValidCommand(data[i]) {
+			return i + 1, data[start : i+1], nil
+		}
+
+		// if it is not a size for the command
+		if !(data[i] >= '0' && data[i] <= '9') {
+			start = i + 1
+		}
+	}
+
+	// no command found yet, try with longer input if not at the end already
+	if !atEOF {
+		return 0, nil, nil
+	}
+
+	return 0, nil, io.EOF
+}
+
+func isValidCommand(data byte) bool {
+	return data == 'F' || data == 'B' || data == 'R' || data == 'L' || data == 'X'
 }
