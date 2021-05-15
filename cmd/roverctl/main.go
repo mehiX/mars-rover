@@ -42,39 +42,16 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// graceful shutdown
+	// used to syncronize with the gracefulShutdown goroutine
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		chInt := make(chan os.Signal, 1)
-		signal.Notify(chInt, os.Interrupt)
 
-		select {
-		case <-chInt:
-			// remove ^C from the output to have a clean output
-			fmt.Printf("\r")
-			cancel()
-			return
-		case <-ctx.Done():
-			return
-		}
-	}()
+	// graceful shutdown
+	go gracefulShutdown(ctx, &wg, cancel)
 
 	ch := rover.Commands(ctx, command, rvr)
 
-	for c := range ch {
-		c.Execute()
-		if delay > 0 {
-			// Insert a delay between the commands for easier testing
-			// Use a select to stop immediately when an interrupt arrives (not wait for the delay between the commands)
-			select {
-			case <-time.Tick(delay):
-			case <-ctx.Done():
-				break
-			}
-		}
-	}
+	rover.ExecuteAll(ctx, ch, delay)
 
 	fmt.Printf("End: %s\n", rvr)
 
@@ -82,4 +59,20 @@ func main() {
 
 	// Wait for the graceful shutdown goroutine to also exit clean
 	wg.Wait()
+}
+
+func gracefulShutdown(ctx context.Context, wg *sync.WaitGroup, cancel context.CancelFunc) {
+	defer wg.Done()
+	chInt := make(chan os.Signal, 1)
+	signal.Notify(chInt, os.Interrupt)
+
+	select {
+	case <-chInt:
+		// remove ^C from the output to have a clean output
+		fmt.Printf("\r")
+		cancel()
+		return
+	case <-ctx.Done():
+		return
+	}
 }

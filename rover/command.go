@@ -101,6 +101,8 @@ func (c *cmdR) Execute() {
 	fmt.Printf("%s\n", c.R)
 }
 
+// Commands Receives a string of commands and a pointer to a rover. Returns a read-only channel where it writes the commnds.
+// The function returns immediately and launches a separate goroutine to write to the channel. The goroutine exists when the work is done or when the upstream context was canceled. Upon exit it also closes the channel, signaling no more commands will be generated.
 func Commands(ctx context.Context, commandsString string, rvr *rover) <-chan Command {
 
 	ch := make(chan Command)
