@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"strings"
 )
 
 type Command interface {
@@ -25,6 +24,16 @@ var NoCommand = &noCmd{}
 type cmdF struct {
 	Factor int
 	R      *rover
+}
+type cmdB struct {
+	Factor int
+	R      *rover
+}
+type cmdL struct {
+	R *rover
+}
+type cmdR struct {
+	R *rover
 }
 
 func (c *cmdF) LogPosition(isStart bool) {
@@ -45,17 +54,6 @@ func (c *cmdF) Execute() {
 		c.R.X -= c.Factor
 	}
 
-}
-
-type cmdB struct {
-	Factor int
-	R      *rover
-}
-type cmdL struct {
-	R *rover
-}
-type cmdR struct {
-	R *rover
 }
 
 func (c *cmdB) LogPosition(isStart bool) {
@@ -135,7 +133,7 @@ func Commands(ctx context.Context, input io.Reader, rvr *rover) <-chan Command {
 				break
 			}
 
-			cmd := decodeCommand(txt, rvr)
+			cmd := NewCommand(txt, rvr)
 
 			select {
 			case <-ctx.Done():
@@ -148,8 +146,8 @@ func Commands(ctx context.Context, input io.Reader, rvr *rover) <-chan Command {
 	return ch
 }
 
-// decodeCommand Decodes string of form `10F` where the last rune is the command identifier and the preceding number is the multiplication factor
-func decodeCommand(txt string, rvr *rover) Command {
+// NewCommand Decodes string of form `10F` where the last rune is the command identifier and the preceding number is the multiplication factor
+func NewCommand(txt string, rvr *rover) Command {
 
 	r := rune(txt[len(txt)-1])
 	factor, _ := strconv.Atoi(txt[:len(txt)-1])
@@ -173,42 +171,5 @@ func decodeCommand(txt string, rvr *rover) Command {
 		return &cmdR{rvr}
 	default:
 		return NoCommand
-	}
-}
-
-// onCommand A SplitFunc that filters out bad commands. It returns tokens for only valid commands
-func onCommand(data []byte, atEOF bool) (advance int, token []byte, err error) {
-
-	data = []byte(strings.ToUpper(string(data)))
-	var start int
-
-	for i := 0; i < len(data); i++ {
-		if isValidCommand(data[i]) {
-			return i + 1, data[start : i+1], nil
-		}
-
-		// if it is not a size for the command
-		if !(data[i] >= '0' && data[i] <= '9') {
-			start = i + 1
-		}
-	}
-
-	// no command found yet, try with longer input if not at the end already
-	if !atEOF {
-		return 0, nil, nil
-	}
-
-	return 0, nil, io.EOF
-}
-
-func isValidCommand(data byte) bool {
-	return data == 'F' || data == 'B' || data == 'R' || data == 'L' || data == 'X'
-}
-
-func logPosition(isStart bool, prefix string, rvr *rover) {
-	if isStart {
-		fmt.Printf("%s: %s -> ", prefix, rvr)
-	} else {
-		fmt.Printf("%s\n", rvr)
 	}
 }

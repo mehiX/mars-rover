@@ -155,12 +155,12 @@ func TestCommandR(t *testing.T) {
 
 func TestDecodeCommand(t *testing.T) {
 
-	c := decodeCommand("F", nil)
+	c := NewCommand("F", nil)
 	if _, ok := c.(*cmdF); !ok {
 		t.Errorf("Expected cmdF, got: %T", c)
 	}
 
-	c = decodeCommand("10B", nil)
+	c = NewCommand("10B", nil)
 	if _, ok := c.(*cmdB); !ok {
 		t.Errorf("Expected cmdB, got: %T", c)
 	} else {
@@ -169,17 +169,17 @@ func TestDecodeCommand(t *testing.T) {
 		}
 	}
 
-	c = decodeCommand("L", nil)
+	c = NewCommand("L", nil)
 	if _, ok := c.(*cmdL); !ok {
 		t.Errorf("Expected cmdL, got: %T", c)
 	}
 
-	c = decodeCommand("R", nil)
+	c = NewCommand("R", nil)
 	if _, ok := c.(*cmdR); !ok {
 		t.Errorf("Expected cmdR, got: %T", c)
 	}
 
-	c = decodeCommand("T", nil)
+	c = NewCommand("T", nil)
 	if _, ok := c.(*noCmd); !ok {
 		t.Errorf("Expected noCmd, got: %T", c)
 	}
