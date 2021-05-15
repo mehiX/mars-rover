@@ -1,8 +1,11 @@
 package rover
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
+	"strings"
 )
 
 type Command interface {
@@ -103,14 +106,27 @@ func (c *cmdR) Execute() {
 
 // Commands Receives a string of commands and a pointer to a rover. Returns a read-only channel where it writes the commnds.
 // The function returns immediately and launches a separate goroutine to write to the channel. The goroutine exists when the work is done or when the upstream context was canceled. Upon exit it also closes the channel, signaling no more commands will be generated.
-func Commands(ctx context.Context, commandsString string, rvr *rover) <-chan Command {
+func Commands(ctx context.Context, input io.Reader, rvr *rover) <-chan Command {
 
 	ch := make(chan Command)
 
 	go func() {
 		defer close(ch)
 
-		for _, r := range commandsString {
+		scanner := bufio.NewScanner(input)
+		scanner.Split(bufio.ScanRunes)
+
+		for scanner.Scan() {
+			r := rune(strings.ToUpper(scanner.Text())[0])
+
+			if r == 'X' {
+				break
+			}
+
+			if r == '\n' {
+				continue
+			}
+
 			cmd := decodeCommand(r, rvr)
 
 			select {

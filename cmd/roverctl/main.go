@@ -4,8 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"time"
 
@@ -25,7 +27,7 @@ func init() {
 	flag.IntVar(&x, "x", 0, "start X coordinate")
 	flag.IntVar(&y, "y", 0, "start y coordinate")
 	flag.StringVar(&direction, "d", "N", "initial pointing direction")
-	flag.StringVar(&command, "c", "", "commands to send to the rover")
+	flag.StringVar(&command, "c", "", "commands to send to the rover. if left empty then enter interractive mode")
 	flag.DurationVar(&delay, "delay", 0, "use an optional delay between commands for better testing")
 
 	flag.Parse()
@@ -49,7 +51,16 @@ func main() {
 	// graceful shutdown
 	go gracefulShutdown(ctx, &wg, cancel)
 
-	ch := rover.Commands(ctx, command, rvr)
+	var input io.Reader
+
+	if command != "" {
+		input = strings.NewReader(command)
+	} else {
+		fmt.Println("Write your commands here. Command 'X' to exit")
+		input = os.Stdin
+	}
+
+	ch := rover.Commands(ctx, input, rvr)
 
 	rover.ExecuteAll(ctx, ch, delay)
 

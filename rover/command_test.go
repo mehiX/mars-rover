@@ -2,6 +2,7 @@ package rover
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -181,7 +182,7 @@ func TestCommandsStream(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	ch := Commands(ctx, "FBFF", nil)
+	ch := Commands(ctx, strings.NewReader("FBFF"), nil)
 
 	c := <-ch
 	if _, ok := c.(*cmdF); !ok {
