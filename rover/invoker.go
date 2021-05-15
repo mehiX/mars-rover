@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// ExecuteAll Listens to a read-only channel for incoming Commands
+// It has an option delay (can be 0) that is a sleep between commands. Can be used to simulate a slower process.
+// The function returns immediately when the context is cancelled or the incoming channel is closed
 func ExecuteAll(ctx context.Context, ch <-chan Command, delay time.Duration) {
 
 	for {
@@ -21,7 +24,7 @@ func ExecuteAll(ctx context.Context, ch <-chan Command, delay time.Duration) {
 				select {
 				case <-time.Tick(delay):
 				case <-ctx.Done():
-					break
+					return
 				}
 			}
 		case <-ctx.Done():
